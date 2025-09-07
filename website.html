@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Tree & Graph Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --text: #34495e;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        }
+        
+        h1 {
+            font-size: 3rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #7f8c8d;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h2 i {
+            color: var(--accent);
+        }
+        
+        .visualization-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .visualization {
+            height: 300px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .tree-node {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        
+        .tree-node:hover {
+            transform: scale(1.15);
+            background: var(--accent);
+            cursor: pointer;
+        }
+        
+        .tree-line {
+            position: absolute;
+            height: 3px;
+            background: var(--dark);
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+        
+        .graph-node {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        
+        .graph-node:hover {
+            transform: scale(1.15);
+            background: var(--primary);
+            cursor: pointer;
+        }
+        
+        .graph-edge {
+            position: absolute;
+            height: 3px;
+            background: var(--dark);
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        
+        .types-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .type-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .type-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .type-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .type-item i {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+        
+        .application {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .application h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .app-example {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .app-example h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding-left: 10px;
+        }
+        
+        li {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        li::before {
+            content: "•";
+            color: var(--primary);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        strong {
+            color: var(--dark);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .code-output {
+            background: #2d3436;
+            color: #dfe6e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Fira Code', monospace;
+            overflow-x: auto;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #636e72;
+        }
+        
+        .code-header h3 {
+            color: #74b9ff;
+        }
+        
+        .copy-btn {
+            background: #0984e3;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .code-content {
+            line-height: 1.5;
+        }
+        
+        .comment {
+            color: #636e72;
+        }
+        
+        .keyword {
+            color: #fd79a8;
+        }
+        
+        .function {
+            color: #74b9ff;
+        }
+        
+        .variable {
+            color: #55efc4;
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .types-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-tree"></i> Advanced Tree & Graph Explorer</h1>
+            <p class="subtitle">Interactive visualizations of tree and graph data structures with real-life applications</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active">Binary Trees</div>
+            <div class="tab">Balanced Trees</div>
+            <div class="tab">Graph Algorithms</div>
+            <div class="tab">Real-world Applications</div>
+        </div>
+        
+        <div class="content">
+            <div class="card">
+                <h2><i class="fas fa-project-diagram"></i> Binary Tree</h2>
+                <p>A hierarchical data structure where each node has at most two children, referred to as the left child and right child.</p>
+                
+                <div class="visualization-container">
+                    <div class="visualization" id="tree-vis">
+                        <!-- Tree visualization will be generated by JavaScript -->
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="preorder"><i class="fas fa-project-diagram"></i> Preorder</button>
+                        <button id="inorder"><i class="fas fa-project-diagram"></i> Inorder</button>
+                        <button id="postorder"><i class="fas fa-project-diagram"></i> Postorder</button>
+                    </div>
+                    
+                    <div class="result" id="traversal-result">
+                        Traversal result will appear here
+                    </div>
+                </div>
+                
+                <div class="types-container">
+                    <div class="type-section">
+                        <h3><i class="fas fa-sitemap"></i> Tree Types</h3>
+                        <div class="type-item">
+                            <i class="fas fa-binary"></i>
+                            <span>Binary Tree</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-search"></i>
+                            <span>Binary Search Tree</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-link"></i>
+                            <span>Threaded Binary Tree</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-balance-scale"></i>
+                            <span>AVL Tree</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-sitemap"></i>
+                            <span>B-Tree</span>
+                        </div>
+                    </div>
+                    
+                    <div class="type-section">
+                        <h3><i class="fas fa-code-branch"></i> Tree Concepts</h3>
+                        <div class="type-item">
+                            <i class="fas fa-circle"></i>
+                            <span>Root, Node, Leaf</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-arrows-alt-v"></i>
+                            <span>Height & Depth</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Traversal Algorithms</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-balance-scale-left"></i>
+                            <span>Balancing</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-tree"></i>
+                            <span>Conversion to Binary Trees</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-output">
+                    <div class="code-header">
+                        <h3>Binary Tree Implementation</h3>
+                        <div class="copy-btn">Copy Code</div>
+                    </div>
+                    <div class="code-content">
+                        <span class="comment">// Binary Tree Node Class</span><br>
+                        <span class="keyword">class</span> <span class="function">TreeNode</span> {<br>
+                        &nbsp;&nbsp;<span class="keyword">constructor</span>(value) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">value</span> = value;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">left</span> = <span class="keyword">null</span>;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">right</span> = <span class="keyword">null</span>;<br>
+                        &nbsp;&nbsp;}<br>
+                        }<br><br>
+                        
+                        <span class="comment">// Inorder Traversal</span><br>
+                        <span class="keyword">function</span> <span class="function">inorderTraversal</span>(root) {<br>
+                        &nbsp;&nbsp;<span class="keyword">if</span> (root === <span class="keyword">null</span>) <span class="keyword">return</span> [];<br>
+                        &nbsp;&nbsp;<span class="keyword">return</span> [<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;...<span class="function">inorderTraversal</span>(root.<span class="variable">left</span>),<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;root.<span class="variable">value</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;...<span class="function">inorderTraversal</span>(root.<span class="variable">right</span>)<br>
+                        &nbsp;&nbsp;];<br>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-network-wired"></i> Graph</h2>
+                <p>A non-linear data structure consisting of nodes and edges. Graphs can be directed or undirected, weighted or unweighted.</p>
+                
+                <div class="visualization-container">
+                    <div class="visualization" id="graph-vis">
+                        <!-- Graph visualization will be generated by JavaScript -->
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="bfs"><i class="fas fa-search"></i> BFS</button>
+                        <button id="dfs"><i class="fas fa-search-plus"></i> DFS</button>
+                        <button id="mst"><i class="fas fa-code-branch"></i> MST</button>
+                    </div>
+                    
+                    <div class="result" id="graph-result">
+                        Graph operation result will appear here
+                    </div>
+                </div>
+                
+                <div class="types-container">
+                    <div class="type-section">
+                        <h3><i class="fas fa-project-diagram"></i> Graph Types</h3>
+                        <div class="type-item">
+                            <i class="fas fa-arrows-alt-h"></i>
+                            <span>Undirected Graph</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                            <span>Directed Graph</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-weight-hanging"></i>
+                            <span>Weighted Graph</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Cyclic Graph</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-chain-broken"></i>
+                            <span>Acyclic Graph</span>
+                        </div>
+                    </div>
+                    
+                    <div class="type-section">
+                        <h3><i class="fas fa-algorithm"></i> Graph Algorithms</h3>
+                        <div class="type-item">
+                            <i class="fas fa-search"></i>
+                            <span>Breadth-First Search (BFS)</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-search-plus"></i>
+                            <span>Depth-First Search (DFS)</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-code-branch"></i>
+                            <span>Minimum Spanning Tree</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-route"></i>
+                            <span>Shortest Path</span>
+                        </div>
+                        <div class="type-item">
+                            <i class="fas fa-sitemap"></i>
+                            <span>Topological Sort</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-output">
+                    <div class="code-header">
+                        <h3>Graph Implementation</h3>
+                        <div class="copy-btn">Copy Code</div>
+                    </div>
+                    <div class="code-content">
+                        <span class="comment">// Graph Class (Adjacency List)</span><br>
+                        <span class="keyword">class</span> <span class="function">Graph</span> {<br>
+                        &nbsp;&nbsp;<span class="keyword">constructor</span>() {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">adjacencyList</span> = {};<br>
+                        &nbsp;&nbsp;}<br><br>
+                        
+                        &nbsp;&nbsp;<span class="comment">// Add a vertex</span><br>
+                        &nbsp;&nbsp;<span class="function">addVertex</span>(vertex) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (!<span class="keyword">this</span>.<span class="variable">adjacencyList</span>[vertex]) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">adjacencyList</span>[vertex] = [];<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;}<br><br>
+                        
+                        &nbsp;&nbsp;<span class="comment">// Add an edge</span><br>
+                        &nbsp;&nbsp;<span class="function">addEdge</span>(vertex1, vertex2) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">adjacencyList</span>[vertex1].<span class="function">push</span>(vertex2);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">adjacencyList</span>[vertex2].<span class="function">push</span>(vertex1);<br>
+                        &nbsp;&nbsp;}<br><br>
+                        
+                        &nbsp;&nbsp;<span class="comment">// BFS Algorithm</span><br>
+                        &nbsp;&nbsp;<span class="function">breadthFirstSearch</span>(start) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> queue = [start];<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> result = [];<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> visited = {};<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;visited[start] = <span class="keyword">true</span>;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">while</span> (queue.length) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> currentVertex = queue.<span class="function">shift</span>();<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;result.<span class="function">push</span>(currentVertex);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.<span class="variable">adjacencyList</span>[currentVertex].<span class="function">forEach</span>(neighbor => {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (!visited[neighbor]) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;visited[neighbor] = <span class="keyword">true</span>;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;queue.<span class="function">push</span>(neighbor);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> result;<br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="application">
+            <h2><i class="fas fa-lightbulb"></i> Real-Life Applications</h2>
+            <div class="app-content">
+                <div class="app-example">
+                    <h3><i class="fas fa-sitemap"></i> Tree Applications</h3>
+                    <ul>
+                        <li><strong>File Systems</strong>: Directory structures are represented as trees</li>
+                        <li><strong>Organization Charts</strong>: Company hierarchies are tree structures</li>
+                        <li><strong>Decision Trees</strong>: Used in machine learning and decision analysis</li>
+                        <li><strong>Binary Search Trees</strong>: Used in databases for efficient searching</li>
+                        <li><strong>Syntax Trees</strong>: Represent the structure of program code</li>
+                        <li><strong>Game Trees</strong>: Used in AI for decision making in games</li>
+                        <li><strong>XML/HTML Parsing</strong>: DOM is a tree structure</li>
+                    </ul>
+                </div>
+                
+                <div class="app-example">
+                    <h3><i class="fas fa-project-diagram"></i> Graph Applications</h3>
+                    <ul>
+                        <li><strong>Social Networks</strong>: Users as nodes, relationships as edges</li>
+                        <li><strong>Maps & Navigation</strong>: Locations as nodes, roads as edges</li>
+                        <li><strong>Web Page Ranking</strong>: PageRank algorithm uses graph theory</li>
+                        <li><strong>Network Routing</strong>: Finding optimal paths in computer networks</li>
+                        <li><strong>Recommendation Systems</strong>: Connecting users with similar interests</li>
+                        <li><strong>Circuit Design</strong>: Components as nodes, connections as edges</li>
+                        <li><strong>Epidemiology</strong>: Modeling spread of diseases</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Tree and Graph Concepts Explorer | Created for educational purposes | <i class="fas fa-heart"></i></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Binary Tree Visualization
+            const treeVis = document.getElementById('tree-vis');
+            const traversalResult = document.getElementById('traversal-result');
+            
+            // Create a simple binary tree
+            const treeNodes = [];
+            const treeLines = [];
+            
+            // Function to create a binary tree
+            function createBinaryTree() {
+                // Clear previous tree
+                treeVis.innerHTML = '';
+                treeNodes.length = 0;
+                treeLines.length = 0;
+                
+                // Create root node
+                const root = createTreeNode(50, 30, 'A');
+                treeNodes.push(root);
+                
+                // Create left subtree
+                const b = createTreeNode(20, 100, 'B');
+                treeNodes.push(b);
+                createTreeLine(50, 50, 20, 100);
+                
+                const d = createTreeNode(10, 170, 'D');
+                treeNodes.push(d);
+                createTreeLine(20, 120, 10, 170);
+                
+                const e = createTreeNode(30, 170, 'E');
+                treeNodes.push(e);
+                createTreeLine(20, 120, 30, 170);
+                
+                // Create right subtree
+                const c = createTreeNode(80, 100, 'C');
+                treeNodes.push(c);
+                createTreeLine(50, 50, 80, 100);
+                
+                const f = createTreeNode(70, 170, 'F');
+                treeNodes.push(f);
+                createTreeLine(80, 120, 70, 170);
+                
+                const g = createTreeNode(90, 170, 'G');
+                treeNodes.push(g);
+                createTreeLine(80, 120, 90, 170);
+                
+                // Add nodes and lines to visualization
+                treeLines.forEach(line => treeVis.appendChild(line));
+                treeNodes.forEach(node => treeVis.appendChild(node));
+            }
+            
+            function createTreeNode(x, y, value) {
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.style.left = ${x}px;
+                node.style.top = ${y}px;
+                node.textContent = value;
+                return node;
+            }
+            
+            function createTreeLine(fromX, fromY, toX, toY) {
+                const line = document.createElement('div');
+                line.className = 'tree-line';
+                
+                const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                
+                line.style.width = ${length}px;
+                line.style.left = ${fromX}px;
+                line.style.top = ${fromY}px;
+                line.style.transform = rotate(${angle}deg);
+                
+                treeLines.push(line);
+            }
+            
+            // Tree traversal functions
+            function preorderTraversal() {
+                traversalResult.textContent = 'Preorder: A, B, D, E, C, F, G';
+                highlightNodes(['A', 'B', 'D', 'E', 'C', 'F', 'G']);
+            }
+            
+            function inorderTraversal() {
+                traversalResult.textContent = 'Inorder: D, B, E, A, F, C, G';
+                highlightNodes(['D', 'B', 'E', 'A', 'F', 'C', 'G']);
+            }
+            
+            function postorderTraversal() {
+                traversalResult.textContent = 'Postorder: D, E, B, F, G, C, A';
+                highlightNodes(['D', 'E', 'B', 'F', 'G', 'C', 'A']);
+            }
+            
+            function highlightNodes(nodes) {
+                // Reset all nodes
+                treeNodes.forEach(node => {
+                    node.style.backgroundColor = '#3498db';
+                });
+                
+                // Highlight nodes in sequence
+                nodes.forEach((nodeValue, index) => {
+                    setTimeout(() => {
+                        const node = treeNodes.find(n => n.textContent === nodeValue);
+                        if (node) {
+                            node.style.backgroundColor = '#e74c3c';
+                            
+                            // Reset after a delay
+                            setTimeout(() => {
+                                node.style.backgroundColor = '#3498db';
+                            }, 500);
+                        }
+                    }, index * 800);
+                });
+            }
+            
+            // Graph Visualization
+            const graphVis = document.getElementById('graph-vis');
+            const graphResult = document.getElementById('graph-result');
+            
+            // Create a simple graph
+            const graphNodes = [];
+            const graphEdges = [];
+            
+            function createGraph() {
+                // Clear previous graph
+                graphVis.innerHTML = '';
+                graphNodes.length = 0;
+                graphEdges.length = 0;
+                
+                // Create nodes
+                const node1 = createGraphNode(50, 50, '1');
+                const node2 = createGraphNode(150, 50, '2');
+                const node3 = createGraphNode(50, 150, '3');
+                const node4 = createGraphNode(150, 150, '4');
+                const node5 = createGraphNode(100, 250, '5');
+                
+                graphNodes.push(node1, node2, node3, node4, node5);
+                
+                // Create edges
+                createGraphEdge(node1, node2);
+                createGraphEdge(node1, node3);
+                createGraphEdge(node2, node4);
+                createGraphEdge(node3, node4);
+                createGraphEdge(node3, node5);
+                createGraphEdge(node4, node5);
+                
+                // Add edges and nodes to visualization
+                graphEdges.forEach(edge => graphVis.appendChild(edge));
+                graphNodes.forEach(node => graphVis.appendChild(node));
+            }
+            
+            function createGraphNode(x, y, value) {
+                const node = document.createElement('div');
+                node.className = 'graph-node';
+                node.style.left = ${x}px;
+                node.style.top = ${y}px;
+                node.textContent = value;
+                return node;
+            }
+            
+            function createGraphEdge(fromNode, toNode) {
+                const fromX = parseFloat(fromNode.style.left) + 22.5;
+                const fromY = parseFloat(fromNode.style.top) + 22.5;
+                const toX = parseFloat(toNode.style.left) + 22.5;
+                const toY = parseFloat(toNode.style.top) + 22.5;
+                
+                const line = document.createElement('div');
+                line.className = 'graph-edge';
+                
+                const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                
+                line.style.width = ${length}px;
+                line.style.left = ${fromX}px;
+                line.style.top = ${fromY}px;
+                line.style.transform = rotate(${angle}deg);
+                
+                graphEdges.push(line);
+            }
+            
+            // Graph operations
+            function breadthFirstSearch() {
+                graphResult.textContent = 'BFS: 1, 2, 3, 4, 5';
+                highlightGraphNodes(['1', '2', '3', '4', '5']);
+            }
+            
+            function depthFirstSearch() {
+                graphResult.textContent = 'DFS: 1, 2, 4, 5, 3';
+                highlightGraphNodes(['1', '2', '4', '5', '3']);
+            }
+            
+            function minimumSpanningTree() {
+                graphResult.textContent = 'MST: Edges: 1-3, 1-2, 2-4, 3-5';
+                highlightGraphNodes(['1', '2', '3', '4', '5']);
+            }
+            
+            function highlightGraphNodes(nodes) {
+                // Reset all nodes
+                graphNodes.forEach(node => {
+                    node.style.backgroundColor = '#e74c3c';
+                });
+                
+                // Highlight nodes in sequence
+                nodes.forEach((nodeValue, index) => {
+                    setTimeout(() => {
+                        const node = graphNodes.find(n => n.textContent === nodeValue);
+                        if (node) {
+                            node.style.backgroundColor = '#3498db';
+                            
+                            // Reset after a delay
+                            setTimeout(() => {
+                                node.style.backgroundColor = '#e74c3c';
+                            }, 500);
+                        }
+                    }, index * 800);
+                });
+            }
+            
+            // Initialize visualizations
+            createBinaryTree();
+            createGraph();
+            
+            // Add event listeners
+            document.getElementById('preorder').addEventListener('click', preorderTraversal);
+            document.getElementById('inorder').addEventListener('click', inorderTraversal);
+            document.getElementById('postorder').addEventListener('click', postorderTraversal);
+            
+            document.getElementById('bfs').addEventListener('click', breadthFirstSearch);
+            document.getElementById('dfs').addEventListener('click', depthFirstSearch);
+            document.getElementById('mst').addEventListener('click', minimumSpanningTree);
+            
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                });
+            });
+            
+            // Copy button functionality
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const codeContent = button.parentElement.nextElementSibling;
+                    const textArea = document.createElement('textarea');
+                    textArea.value = codeContent.textContent;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    // Visual feedback
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
